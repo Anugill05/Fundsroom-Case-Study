@@ -38,7 +38,7 @@ function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            className={({ isActive }) => (isActive ? "sidebar-link is-active" : "sidebar-link")}
+            className={({isActive}) => (isActive ? "sidebar-link is-active" : "sidebar-link")}
           >
             {item.label}
           </NavLink>
