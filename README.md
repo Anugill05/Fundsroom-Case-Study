@@ -2,6 +2,11 @@
 
 A full-stack operations management system covering inventory tracking, work orders, internal stock transfers, and customer order reservations. Built with Express, PostgreSQL, and React.
 
+## Live Demo
+
+**Frontend:** https://fundsroom-case-study-peach.vercel.app/
+**Backend API:** https://mini-erp-backend-0z69.onrender.com/
+
 ## Features
 
 - JWT authentication with role-based access control (Admin, Operations, Sales)
@@ -15,18 +20,18 @@ A full-stack operations management system covering inventory tracking, work orde
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend | Node.js, Express |
-| Database | PostgreSQL |
-| Authentication | JWT, bcryptjs |
-| Frontend | React, Vite, React Router |
-| Testing | Jest, Supertest |
+| Layer          | Technology               |
+|----------------|--------------------------|
+| Backend        | Node.js, Express         |
+| Database       | PostgreSQL               |
+| Authentication | JWT, bcryptjs            |
+| Frontend       | React, Vite, React Router|
+| Testing        | Jest, Supertest          |
 
 ## Project Structure
 
 ```text
-full stack learning and researching project/
+MiniOpsErp/
 ├── backend/                  Express API, PostgreSQL data layer, tests, seed data
 ├── frontend/                 React application
 ├── ER_DIAGRAM.md             Database schema
@@ -91,24 +96,24 @@ npm run dev
 
 Password for all accounts: `password123`
 
-| Email | Role | Location |
-|---|---|---|
-| `admin@erp.com` | ADMIN | — |
-| `ops@erp.com` | OPERATIONS | `WAREHOUSE-A` |
-| `sales@erp.com` | SALES | — |
+| Email           | Role       | Location      |
+|-----------------|------------|---------------|
+| `admin@erp.com` | ADMIN      |       —       |
+| `ops@erp.com`   | OPERATIONS | `WAREHOUSE-A` |
+| `sales@erp.com` | SALES      |       —       |
 
 ## Demo Dataset
 
 `npm run seed` provisions minimal data for exploring the app. For demos and presentations, `npm run seed:demo` (or `npm run dev:local:demo` to boot and seed in one step) loads a richer, internally consistent dataset: 3 locations, 9 items, and a full spread of inventory, work orders, transfers, and customer orders.
 
-| Email | Role | Location |
-|---|---|---|
-| `admin@erp.com` | ADMIN | — |
-| `ops@erp.com` | OPERATIONS | Pune-Plant |
-| `priya.ops@erp.com` | OPERATIONS | Chennai-Warehouse |
-| `arjun.ops@erp.com` | OPERATIONS | Noida-DC |
-| `sales@erp.com` | SALES | — |
-| `neha.sales@erp.com` | SALES | — |
+| Email                | Role       | Location          |
+|----------------------|------------|-------------------|
+| `admin@erp.com`      | ADMIN      |         —         |
+| `ops@erp.com`        | OPERATIONS | Pune-Plant        |
+| `priya.ops@erp.com`  | OPERATIONS | Chennai-Warehouse |
+| `arjun.ops@erp.com`  | OPERATIONS | Noida-DC          |
+| `sales@erp.com`      | SALES      |         —         |
+| `neha.sales@erp.com` | SALES      |         —         |
 
 Re-running this script is safe — it rebuilds inventory, work orders, transfers, and customer orders, and upserts users without changing credentials.
 
@@ -116,17 +121,17 @@ Re-running this script is safe — it rebuilds inventory, work orders, transfers
 
 **Backend**
 
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | Secret used to sign JWTs |
-| `JWT_EXPIRES_IN` | Token lifetime, e.g. `8h` |
-| `PORT` | API port (default `4000`) |
+| Variable         | Purpose                      |
+|------------------|------------------------------|
+| `DATABASE_URL`   | PostgreSQL connection string |
+| `JWT_SECRET`     | Secret used to sign JWTs     |
+| `JWT_EXPIRES_IN` | Token lifetime, e.g. `8h`    |
+| `PORT`           | API port (default `4000`)    |
 
 **Frontend**
 
-| Variable | Purpose |
-|---|---|
+| Variable       | Purpose                     |
+|----------------|-----------------------------|
 | `VITE_API_URL` | Base URL of the backend API |
 
 ## Database
