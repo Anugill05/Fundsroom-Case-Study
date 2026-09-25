@@ -4,7 +4,6 @@ This is a real relational schema on PostgreSQL (see `backend/src/db.js`),
 with actual foreign keys and `UNIQUE` constraints enforced by the database
 itself, not application code. The diagram renders on GitHub as Mermaid:
 
-
 ```mermaid
 erDiagram
     USER ||--o{ WORK_ORDER : assigned
