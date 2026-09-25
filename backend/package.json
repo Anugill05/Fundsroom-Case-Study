@@ -1,0 +1,30 @@
+{
+  "name": "mini-ops-erp-backend",
+  "version": "1.0.0",
+  "description": "Mini Operations ERP - Backend API",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/seed.js",
+    "test": "jest --runInBand",
+    "dev:local": "node src/dev-local.js",
+    "seed:demo": "node src/seed-demo.js",
+    "dev:local:demo": "cross-env SEED_SCRIPT=seed-demo.js node src/dev-local.js",
+    "db:migrate": "node -e \"require('./src/db').connect().then(() => process.exit())\""
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}

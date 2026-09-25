@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mini-ops-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mini_ops_erp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: mini-ops-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/mini_ops_erp
+      JWT_SECRET: local-docker-secret-change-me
+      JWT_EXPIRES_IN: 8h
+      PORT: 4000
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:4000
+    container_name: mini-ops-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:

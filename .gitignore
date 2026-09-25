@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+/dist/
+frontend/dist/
+coverage/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.test
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+!backend/.env.test
+
+# Database files
+*.db
+*.db-journal
+.mongo-data/
+.mongo-test-data/
+
+# Logs and misc
+*.log
+.DS_Store
+Thumbs.db
+.local-scratch/

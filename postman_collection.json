@@ -1,0 +1,171 @@
+{
+  "info": {
+    "name": "Mini Ops ERP API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@erp.com\",\n  \"password\": \"password123\",\n  \"role\": \"ADMIN\"\n}" }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@erp.com\",\n  \"password\": \"password123\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "List Inventory",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/inventory"
+          }
+        },
+        {
+          "name": "Add / Top-up Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/inventory",
+            "body": { "mode": "raw", "raw": "{\n  \"itemName\": \"Steel Bolt M8\",\n  \"category\": \"Hardware\",\n  \"location\": \"WAREHOUSE-A\",\n  \"batch\": \"B001\",\n  \"physicalQty\": 100\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Work Orders",
+      "item": [
+        {
+          "name": "List Work Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/workorders"
+          }
+        },
+        {
+          "name": "Create Work Order (Admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/workorders",
+            "body": { "mode": "raw", "raw": "{\n  \"location\": \"WAREHOUSE-A\",\n  \"itemId\": 1,\n  \"requiredQty\": 100,\n  \"assignedUserId\": 2\n}" }
+          }
+        },
+        {
+          "name": "Update Work Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/workorders/1/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transfers",
+      "item": [
+        {
+          "name": "List Transfers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/transfers"
+          }
+        },
+        {
+          "name": "Request Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/transfers",
+            "body": { "mode": "raw", "raw": "{\n  \"sourceLocation\": \"WAREHOUSE-A\",\n  \"destLocation\": \"WAREHOUSE-B\",\n  \"itemId\": 1,\n  \"quantity\": 40\n}" }
+          }
+        },
+        {
+          "name": "Dispatch Transfer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/transfers/1/dispatch"
+          }
+        },
+        {
+          "name": "Receive Transfer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/transfers/1/receive"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Orders",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/orders"
+          }
+        },
+        {
+          "name": "Reserve Stock (Create Order)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": { "mode": "raw", "raw": "{\n  \"itemId\": 1,\n  \"location\": \"WAREHOUSE-A\",\n  \"quantity\": 60\n}" }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/orders/1/cancel"
+          }
+        }
+      ]
+    }
+  ]
+}
