@@ -2,6 +2,7 @@ const express = require("express");
 const prisma = require("../db");
 const requireAuth = require("../middleware/auth");
 const { authorize } = require("../middleware/authorize");
+const { requireFields, isNonEmptyString, isPositiveInt, isOneOf, firstError } = require("../utils/validate");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -21,15 +22,17 @@ router.get("/", async (req, res) => {
 router.post("/", authorize("ADMIN"), async (req, res) => {
   const { location, itemId, requiredQty, assignedUserId } = req.body;
 
-  if (!location || !itemId || !requiredQty || !assignedUserId) {
-    return res.status(400).json({
-      error: "location, itemId, requiredQty and assignedUserId are required",
-    });
-  }
+  const err = firstError(
+    requireFields(req.body, ["location", "itemId", "requiredQty", "assignedUserId"]),
+    location !== undefined ? isNonEmptyString(location, "location", 60) : null,
+    itemId !== undefined ? isPositiveInt(itemId, "itemId") : null,
+    requiredQty !== undefined ? isPositiveInt(requiredQty, "requiredQty") : null,
+    assignedUserId !== undefined ? isPositiveInt(assignedUserId, "assignedUserId") : null
+  );
+  if (err) return res.status(400).json({ error: err });
+
   const qty = Number(requiredQty);
-  if (!Number.isInteger(qty) || qty <= 0) {
-    return res.status(400).json({ error: "requiredQty must be a positive integer" });
-  }
+  const cleanLocation = location.trim();
 
   const item = await prisma.item.findUnique({ where: { id: Number(itemId) } });
   if (!item) return res.status(404).json({ error: "Item not found" });
@@ -39,7 +42,7 @@ router.post("/", authorize("ADMIN"), async (req, res) => {
 
   const workOrder = await prisma.workOrder.create({
     data: {
-      location,
+      location: cleanLocation,
       itemId: Number(itemId),
       requiredQty: qty,
       assignedUserId: Number(assignedUserId),
@@ -48,7 +51,7 @@ router.post("/", authorize("ADMIN"), async (req, res) => {
   });
 
   const stockAtLocation = await prisma.inventory.findMany({
-    where: { itemId: Number(itemId), location },
+    where: { itemId: Number(itemId), location: cleanLocation },
   });
   const availableAtLocation = stockAtLocation.reduce(
     (sum, row) => sum + (row.physicalQty - row.reservedQty),
@@ -71,9 +74,12 @@ router.post("/", authorize("ADMIN"), async (req, res) => {
 router.patch("/:id/status", authorize("ADMIN", "OPERATIONS"), async (req, res) => {
   const { status } = req.body;
   const allowed = ["ASSIGNED", "IN_PROGRESS", "COMPLETED"];
-  if (!allowed.includes(status)) {
-    return res.status(400).json({ error: `status must be one of ${allowed.join(", ")}` });
-  }
+
+  const err = firstError(
+    requireFields(req.body, ["status"]),
+    status !== undefined ? isOneOf(status, allowed, "status") : null
+  );
+  if (err) return res.status(400).json({ error: err });
 
   try {
     const wo = await prisma.workOrder.update({

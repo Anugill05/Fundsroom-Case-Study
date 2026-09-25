@@ -2,6 +2,7 @@ const express = require("express");
 const prisma = require("../db");
 const requireAuth = require("../middleware/auth");
 const { authorize, enforceOwnLocation } = require("../middleware/authorize");
+const { requireFields, isNonEmptyString, isPositiveInt, firstError } = require("../utils/validate");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -25,21 +26,28 @@ router.post(
   async (req, res) => {
   const { sourceLocation, destLocation, itemId, quantity } = req.body;
 
-  if (!sourceLocation || !destLocation || !itemId || !quantity) {
-    return res.status(400).json({
-      error: "sourceLocation, destLocation, itemId and quantity are required",
-    });
-  }
+  const err = firstError(
+    requireFields(req.body, ["sourceLocation", "destLocation", "itemId", "quantity"]),
+    sourceLocation !== undefined ? isNonEmptyString(sourceLocation, "sourceLocation", 60) : null,
+    destLocation !== undefined ? isNonEmptyString(destLocation, "destLocation", 60) : null,
+    itemId !== undefined ? isPositiveInt(itemId, "itemId") : null,
+    quantity !== undefined ? isPositiveInt(quantity, "quantity") : null
+  );
+  if (err) return res.status(400).json({ error: err });
+
   const qty = Number(quantity);
-  if (!Number.isInteger(qty) || qty <= 0) {
-    return res.status(400).json({ error: "quantity must be a positive integer" });
-  }
-  if (sourceLocation === destLocation) {
+  const cleanSource = sourceLocation.trim();
+  const cleanDest = destLocation.trim();
+
+  if (cleanSource === cleanDest) {
     return res.status(400).json({ error: "sourceLocation and destLocation must differ" });
   }
 
+  const item = await prisma.item.findUnique({ where: { id: Number(itemId) } });
+  if (!item) return res.status(404).json({ error: "Item not found" });
+
   const transfer = await prisma.transfer.create({
-    data: { sourceLocation, destLocation, itemId: Number(itemId), quantity: qty, status: "REQUESTED" },
+    data: { sourceLocation: cleanSource, destLocation: cleanDest, itemId: Number(itemId), quantity: qty, status: "REQUESTED" },
   });
   res.status(201).json(transfer);
 });
@@ -48,6 +56,9 @@ router.post(
 // Test 2: cannot transfer more than available inventory.
 router.post("/:id/dispatch", authorize("ADMIN", "OPERATIONS"), async (req, res) => {
   const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "id must be a positive integer" });
+  }
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -121,6 +132,9 @@ router.post("/:id/dispatch", authorize("ADMIN", "OPERATIONS"), async (req, res) 
 // Test 4: same transfer cannot be received twice.
 router.post("/:id/receive", authorize("ADMIN", "OPERATIONS"), async (req, res) => {
   const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "id must be a positive integer" });
+  }
 
   try {
     const result = await prisma.$transaction(async (tx) => {

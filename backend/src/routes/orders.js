@@ -2,6 +2,7 @@ const express = require("express");
 const prisma = require("../db");
 const requireAuth = require("../middleware/auth");
 const { authorize, enforceOwnLocation } = require("../middleware/authorize");
+const { requireFields, isNonEmptyString, isPositiveInt, firstError } = require("../utils/validate");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -35,19 +36,25 @@ router.post(
   async (req, res) => {
   const { itemId, location, quantity } = req.body;
 
-  if (!itemId || !location || !quantity) {
-    return res.status(400).json({ error: "itemId, location and quantity are required" });
-  }
+  const err = firstError(
+    requireFields(req.body, ["itemId", "location", "quantity"]),
+    itemId !== undefined ? isPositiveInt(itemId, "itemId") : null,
+    location !== undefined ? isNonEmptyString(location, "location", 60) : null,
+    quantity !== undefined ? isPositiveInt(quantity, "quantity") : null
+  );
+  if (err) return res.status(400).json({ error: err });
+
   const qty = Number(quantity);
-  if (!Number.isInteger(qty) || qty <= 0) {
-    return res.status(400).json({ error: "quantity must be a positive integer" });
-  }
+  const cleanLocation = location.trim();
+
+  const item = await prisma.item.findUnique({ where: { id: Number(itemId) } });
+  if (!item) return res.status(404).json({ error: "Item not found" });
 
   try {
     const order = await prisma.$transaction(async (tx) => {
       let remaining = qty;
       const rows = await tx.inventory.findMany({
-        where: { itemId: Number(itemId), location },
+        where: { itemId: Number(itemId), location: cleanLocation },
         orderBy: { id: "asc" },
       });
 
@@ -93,7 +100,7 @@ router.post(
       return tx.customerOrder.create({
         data: {
           itemId: Number(itemId),
-          location,
+          location: cleanLocation,
           quantity: qty,
           status: "RESERVED",
           createdByUserId: req.user.id,
@@ -111,6 +118,9 @@ router.post(
 // (Matches "Live Verification / Change 3" so it's ready if drawn.)
 router.post("/:id/cancel", authorize("ADMIN", "SALES"), async (req, res) => {
   const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "id must be a positive integer" });
+  }
 
   try {
     const result = await prisma.$transaction(async (tx) => {

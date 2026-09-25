@@ -2,6 +2,7 @@ const express = require("express");
 const prisma = require("../db");
 const requireAuth = require("../middleware/auth");
 const { authorize, enforceOwnLocation } = require("../middleware/authorize");
+const { requireFields, isNonEmptyString, isNonNegativeInt, firstError } = require("../utils/validate");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -41,19 +42,27 @@ router.post(
   async (req, res) => {
   const { itemName, category, location, batch, physicalQty, reference } = req.body;
 
-  if (!itemName || !category || !location || !batch) {
-    return res.status(400).json({ error: "itemName, category, location and batch are required" });
-  }
+  const err = firstError(
+    requireFields(req.body, ["itemName", "category", "location", "batch"]),
+    itemName !== undefined ? isNonEmptyString(itemName, "itemName", 120) : null,
+    category !== undefined ? isNonEmptyString(category, "category", 60) : null,
+    location !== undefined ? isNonEmptyString(location, "location", 60) : null,
+    batch !== undefined ? isNonEmptyString(batch, "batch", 60) : null,
+    physicalQty !== undefined ? isNonNegativeInt(physicalQty, "physicalQty") : "physicalQty is required"
+  );
+  if (err) return res.status(400).json({ error: err });
+
   const qty = Number(physicalQty);
-  if (!Number.isInteger(qty) || qty < 0) {
-    return res.status(400).json({ error: "physicalQty must be a non-negative integer" });
-  }
+  const cleanItemName = itemName.trim();
+  const cleanCategory = category.trim();
+  const cleanLocation = location.trim();
+  const cleanBatch = batch.trim();
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      let item = await tx.item.findFirst({ where: { name: itemName, category } });
+      let item = await tx.item.findFirst({ where: { name: cleanItemName, category: cleanCategory } });
       if (!item) {
-        item = await tx.item.create({ data: { name: itemName, category } });
+        item = await tx.item.create({ data: { name: cleanItemName, category: cleanCategory } });
       }
 
       // Duplicate inventory transaction guard: if a `reference` is supplied
@@ -68,9 +77,9 @@ router.post(
       }
 
       const inv = await tx.inventory.upsert({
-        where: { itemId_location_batch: { itemId: item.id, location, batch } },
+        where: { itemId_location_batch: { itemId: item.id, location: cleanLocation, batch: cleanBatch } },
         update: { physicalQty: { increment: qty } },
-        create: { itemId: item.id, location, batch, physicalQty: qty, reservedQty: 0 },
+        create: { itemId: item.id, location: cleanLocation, batch: cleanBatch, physicalQty: qty, reservedQty: 0 },
       });
 
       await tx.inventoryTransaction.create({
